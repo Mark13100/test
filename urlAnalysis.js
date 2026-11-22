@@ -90,7 +90,8 @@ if (isPunycode) {
   const domainParts = hostname.split(".").filter(Boolean);
   let effectiveDomain = hostname;
   let subdomainCount = 0;
-  const twoPartTlds = ["co.uk", "com.au", "co.nz", "co.jp", "com.br", "co.za", "gov.uk", "edu.au", "com.sg", "co.il"];
+  const twoPartTlds = [
+  "co.uk","com.au","co.nz","co.jp","com.br","co.za","gov.uk","edu.au","com.sg","co.il","org.uk","me.uk","net.uk","ac.uk","org.au","net.au","edu.uk","com.mx","com.tr","com.hk","com.tw","com.cn","com.my","com.ph","com.pk"];
   const hasTwoPartTld = twoPartTlds.some((t) => hostname.endsWith("." + t));
   if (domainParts.length >= 2) {
     if (hasTwoPartTld && domainParts.length >= 3) {
