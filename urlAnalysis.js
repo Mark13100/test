@@ -2,15 +2,13 @@ import { SUSPICIOUS_KEYWORDS, HIGH_RISK_TLDS, SUSPICIOUS_PORTS } from '../config
 function extractUrlFeatures(rawUrl) {
   const signals = [];
   let cleanUrl = rawUrl.trim();
-  if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://") && !cleanUrl.startsWith("ftp://")) {
-    cleanUrl = "https://" + cleanUrl;
-  }
+  let cleanUrl = rawUrl.trim();const hasProtocol =/^(https?|ftp):\/\//i.test(cleanUrl);if (!hasProtocol) {  cleanUrl = "https://" + cleanUrl;}
   let parsed;
   try {
     parsed = new URL(cleanUrl);
   } catch {
     try {
-      parsed = new URL("https://" + cleanUrl.replace(/^https?:\/\//, ""));
+      parsed = new URL("https://" + cleanUrl.replace(/^[a-z][a-z0-9+.-]*:\/\//i, ""));
     } catch {
       parsed = new URL("https://invalid-url-format.local");
     }
@@ -41,10 +39,28 @@ function extractUrlFeatures(rawUrl) {
       evidence: { hostname }
     });
   }
-  const isPunycode = hostname.startsWith("xn--") || hostname.includes(".xn--");
-  let decodedPunycode;
-  if (isPunycode) {
-    decodedPunycode = hostname.split(".").map((part) => part.startsWith("xn--") ? `[Unicode:${part.substring(4)}]` : part).join(".");
+const isPunycode = hostname
+  .split(".")
+  .some((part) => part.toLowerCase().startsWith("xn--"));
+
+let decodedPunycode;
+
+if (isPunycode) {
+  decodedPunycode = hostname
+    .split(".")
+    .map((part) => {
+      if (part.toLowerCase().startsWith("xn--")) {
+        try {
+          return punycode.decode(part.slice(4));
+        } catch {
+          return part;
+        }
+      }
+
+      return part;
+    })
+    .join(".");
+}
     signals.push({
       id: "SIGNAL_PUNYCODE_IDN",
       category: "URL_STRUCTURE",
